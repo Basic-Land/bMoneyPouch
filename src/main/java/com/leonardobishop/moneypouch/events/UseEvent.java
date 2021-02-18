@@ -1,10 +1,15 @@
 package com.leonardobishop.moneypouch.events;
 
+import com.google.common.collect.Lists;
 import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
 import com.leonardobishop.moneypouch.economytype.InvalidEconomyType;
 import com.leonardobishop.moneypouch.exceptions.PaymentFailedException;
+import com.leonardobishop.moneypouch.other.NBT;
 import com.leonardobishop.moneypouch.title.Title_Other;
+import cz.devfire.bantidupe.AntiDupe;
+import cz.devfire.bantidupe.AntiDupeAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -13,8 +18,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -39,36 +47,63 @@ public class UseEvent implements Listener {
         }
 
         if (player.getItemInHand() != null && player.getItemInHand().getType() != Material.AIR) {
+            NBT nbt = new NBT(player.getItemInHand());
+
+            if (!nbt.hasNBTTags()) return;
+
+            String id = nbt.getString("moneyPouch");
+
             for (Pouch p : plugin.getPouches()) {
-                if (p.getItemStack().isSimilar(player.getItemInHand())) {
-                    event.setCancelled(true);
+                if (!id.equalsIgnoreCase(p.getId())) continue;
 
-                    if (p.getEconomyType() instanceof InvalidEconomyType
-                            && plugin.getConfig().getBoolean("error-handling.prevent-opening-invalid-pouches", true)) {
-                        player.sendMessage(plugin.getMessage(MoneyPouch.Message.INVALID_POUCH));
-                        return;
-                    }
+                event.setCancelled(true);
 
-                    if (opening.contains(player.getUniqueId())) {
-                        player.sendMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
-                        return;
-                    }
-
-                    String permission = "moneypouch.pouches." + p.getId();
-                    if (p.isPermissionRequired() && !player.hasPermission(permission)) {
-                        player.sendMessage(plugin.getMessage(MoneyPouch.Message.NO_PERMISSION));
-                        return;
-                    }
-
-                    if (player.getItemInHand().getAmount() == 1) {
-                        player.setItemInHand(null);
-                    } else {
-                        player.getItemInHand().setAmount(player.getItemInHand().getAmount() - 1);
-                        player.updateInventory();
-                    }
-
-                    usePouch(player, p);
+                if (p.getEconomyType() instanceof InvalidEconomyType
+                        && plugin.getConfig().getBoolean("error-handling.prevent-opening-invalid-pouches", true)) {
+                    player.sendMessage(plugin.getMessage(MoneyPouch.Message.INVALID_POUCH));
+                    return;
                 }
+
+                if (opening.contains(player.getUniqueId())) {
+                    player.sendMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
+                    return;
+                }
+
+                if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
+                    AntiDupeAPI api = AntiDupe.getInstance().getApi();
+
+                    if (api.isDuped(player.getItemInHand())) {
+                        api.warn(event.getPlayer());
+                        api.removeItem(player.getItemInHand());
+
+                        if (player.getItemInHand().getAmount() == 1) {
+                            player.setItemInHand(null);
+                        } else {
+                            player.getItemInHand().setAmount(player.getItemInHand().getAmount() - 1);
+                            player.updateInventory();
+                        }
+
+                        return;
+                    }
+
+                    api.removeItem(player.getItemInHand());
+                }
+
+                String permission = "moneypouch.pouches." + p.getId();
+                if (p.isPermissionRequired() && !player.hasPermission(permission)) {
+                    player.sendMessage(plugin.getMessage(MoneyPouch.Message.NO_PERMISSION));
+                    return;
+                }
+
+                if (player.getItemInHand().getAmount() == 1) {
+                    player.setItemInHand(null);
+                } else {
+                    player.getItemInHand().setAmount(player.getItemInHand().getAmount() - 1);
+                    player.updateInventory();
+                }
+
+                usePouch(player, p);
+                return;
             }
         }
     }

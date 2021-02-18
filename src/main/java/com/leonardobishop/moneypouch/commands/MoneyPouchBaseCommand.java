@@ -3,6 +3,7 @@ package com.leonardobishop.moneypouch.commands;
 import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
 import com.leonardobishop.moneypouch.economytype.EconomyType;
+import cz.devfire.bantidupe.AntiDupe;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -76,7 +77,11 @@ public class MoneyPouchBaseCommand implements CommandExecutor, TabCompleter {
             }
 
             for (int i = 0; i < amount; i++) {
-                target.getInventory().addItem(pouch.getItemStack());
+                if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
+                    target.getInventory().addItem(AntiDupe.getInstance().getApi().saveItem(pouch.getItemStack().clone()));
+                } else {
+                    target.getInventory().addItem(pouch.getItemStack());
+                }
             }
 
             sender.sendMessage(plugin.getMessage(MoneyPouch.Message.GIVE_ITEM).replace("%player%",

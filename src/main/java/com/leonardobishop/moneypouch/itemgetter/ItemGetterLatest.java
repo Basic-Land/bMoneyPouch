@@ -1,5 +1,7 @@
 package com.leonardobishop.moneypouch.itemgetter;
 
+import com.leonardobishop.moneypouch.other.NBT;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -68,7 +70,17 @@ public class ItemGetterLatest implements ItemGetter {
             type = Material.STONE;
         }
 
+
+
         ItemStack is = new ItemStack(type, 1, (short) data);
+
+        if (type == Material.PLAYER_HEAD) {
+            is = getHead(config.getString(path + ".base64", path + ".base64"));
+        }
+
+        NBT nbt = new NBT(is);
+        nbt.setString("moneyPouch",path.split("\\.")[2]);
+
         ItemMeta ism = is.getItemMeta();
         ism.setLore(lore);
         ism.setDisplayName(name);
@@ -205,5 +217,13 @@ public class ItemGetterLatest implements ItemGetter {
 
         is.setItemMeta(ism);
         return is;
+    }
+
+    public ItemStack getHead(String value) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        UUID hashAsId = new UUID(value.hashCode(), value.hashCode());
+        return Bukkit.getUnsafe().modifyItemStack(skull,
+                "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + value + "\"}]}}}"
+        );
     }
 }

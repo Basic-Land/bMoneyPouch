@@ -7,7 +7,7 @@
     <groupId>com.leonardobishop</groupId>
     <artifactId>moneypouch</artifactId>
     <version>3.4</version>
-    <name>MoneyPouch</name>
+    <name>bMoneyPouch</name>
 
     <properties>
         <release.version>${version}</release.version>
@@ -28,6 +28,11 @@
         <repository>
             <id>CodeMC</id>
             <url>https://repo.codemc.org/repository/maven-public</url>
+        </repository>
+
+        <repository>
+            <id>dev-private</id>
+            <url>http://nexus.basicland.cz:8081/repository/dev-private/</url>
         </repository>
     </repositories>
 
@@ -63,10 +68,17 @@
             <version>1.8</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>cz.devfire</groupId>
+            <artifactId>bAntiDupe</artifactId>
+            <version>1.1</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>MoneyPouch</finalName>
+        <finalName>bMoneyPouch</finalName>
         <sourceDirectory>src/main/java</sourceDirectory>
 
         <resources>
