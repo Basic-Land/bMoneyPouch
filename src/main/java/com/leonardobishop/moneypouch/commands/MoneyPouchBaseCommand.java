@@ -78,7 +78,7 @@ public class MoneyPouchBaseCommand implements CommandExecutor, TabCompleter {
 
             for (int i = 0; i < amount; i++) {
                 if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
-                    target.getInventory().addItem(AntiDupe.getInstance().getApi().saveItem(pouch.getItemStack().clone()));
+                    target.getInventory().addItem(AntiDupe.getApi().saveItem(pouch.getItemStack().clone()));
                 } else {
                     target.getInventory().addItem(pouch.getItemStack());
                 }

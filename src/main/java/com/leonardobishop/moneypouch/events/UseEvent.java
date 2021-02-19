@@ -9,6 +9,7 @@ import com.leonardobishop.moneypouch.other.NBT;
 import com.leonardobishop.moneypouch.title.Title_Other;
 import cz.devfire.bantidupe.AntiDupe;
 import cz.devfire.bantidupe.AntiDupeAPI;
+import cz.devfire.bantidupe.Other.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -70,19 +71,17 @@ public class UseEvent implements Listener {
                 }
 
                 if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
-                    AntiDupeAPI api = AntiDupe.getInstance().getApi();
+                    AntiDupeAPI api = AntiDupe.getApi();
 
                     if (api.isDuped(player.getItemInHand())) {
-                        api.warn(event.getPlayer());
+                        event.setCancelled(true);
+                        api.warnPlayer(event.getPlayer());
                         api.removeItem(player.getItemInHand());
-
-                        if (player.getItemInHand().getAmount() == 1) {
-                            player.setItemInHand(null);
-                        } else {
-                            player.getItemInHand().setAmount(player.getItemInHand().getAmount() - 1);
-                            player.updateInventory();
-                        }
-
+                        event.getPlayer().getInventory().remove(event.getPlayer().getItemInHand());
+                        return;
+                    } else if (!api.hasUid(player.getItemInHand())) {
+                        event.setCancelled(true);
+                        event.getPlayer().sendMessage(Utils.cc("&c&lServer &8&l» &7Nenasel jsem UID predmetu. Kontaktuj prosim administratora."));
                         return;
                     }
 
