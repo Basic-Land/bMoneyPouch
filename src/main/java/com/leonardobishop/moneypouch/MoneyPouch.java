@@ -26,17 +26,22 @@ import org.apache.commons.lang.StringUtils;
 import org.bstats.bukkit.MetricsLite;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.spongepowered.api.profile.GameProfile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -45,10 +50,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MoneyPouch extends JavaPlugin {
     private final ArrayList<Pouch> pouches = new ArrayList<>();
@@ -375,7 +377,7 @@ public class MoneyPouch extends JavaPlugin {
         GIVE_ITEM("give-item", "&6Given &e%player% %item%&6."),
         RECEIVE_ITEM("receive-item", "&6You have been given %item%&6."),
         PRIZE_MESSAGE("prize-message", "&6You have received &c%prefix%%prize%%suffix%&6!"),
-        ALREADY_OPENING("already-opening", "&cPlease wait for your current pouch opening to complete first!"),
+        ALREADY_OPENING("already-opening", "&c&lServer &8&l» &7Jiz oteviras balicek, vyckej!"),
         INVALID_POUCH("invalid-pouch", "&cThis pouch is invalid and cannot be opened."),
         INVENTORY_FULL("inventory-full", "&cYour inventory is full."),
         REWARD_ERROR("reward-error", "&cYour reward of %prefix%%prize%%suffix% has failed to process. Contact an admin, this has been logged."),
@@ -401,5 +403,4 @@ public class MoneyPouch extends JavaPlugin {
             return def;
         }
     }
-
 }
