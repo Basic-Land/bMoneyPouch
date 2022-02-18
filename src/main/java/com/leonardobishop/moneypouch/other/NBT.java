@@ -3,50 +3,103 @@ package com.leonardobishop.moneypouch.other;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class NBT {
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
-    private ItemStack item;
+import static com.leonardobishop.moneypouch.other.Ref.*;
+
+public class NBT {
+    private static final Class<?> craftItemStack = craft("inventory.CraftItemStack");
+    private static final Class<?> itemStack = nms("ItemStack", "world.item");
+    private static final Class<?> nbtTagCompound = nms("NBTTagCompound", "nbt");
+
+    private static final Method asNMSCopy = method(craftItemStack, "asNMSCopy", ItemStack.class);
+    private static final Method getItemMeta = method(craftItemStack, "getItemMeta", itemStack);
+    private static final Method getTag = method(itemStack, "getTag", "s");
+    private static final Method hasTag = method(itemStack, "hasTag", "r");
+    private static final Method setTag = method(itemStack, "setTag", "c", nbtTagCompound);
+
+    private static final Method setStringMethod = method(nbtTagCompound, "setString", "a", String.class, String.class);
+    private static final Method setIntMethod = method(nbtTagCompound, "setInt", "a", String.class, int.class);
+    private static final Method setBooleanMethod = method(nbtTagCompound, "setBoolean", "a", String.class, boolean.class);
+    private static final Method setDoubleMethod = method(nbtTagCompound, "setDouble", "a", String.class, double.class);
+
+    private static final Method getStringMethod = method(nbtTagCompound, "getString", "l", String.class);
+    private static final Method getIntMethod = method(nbtTagCompound, "getInt", "h", String.class);
+    private static final Method getBooleanMethod = method(nbtTagCompound, "getBoolean", "q", String.class);
+    private static final Method getDoubleMethod = method(nbtTagCompound, "getDouble", "k", String.class);
+
+    private final ItemStack item;
 
     public NBT(ItemStack item) {
         this.item = item;
     }
 
     public Object getNBTTags() {
-        Object itemstack = Ref.invokeNulled(Ref.method(Ref.craft("inventory.CraftItemStack"), "asNMSCopy", ItemStack.class), item);
-        Object tag = Ref.invoke(itemstack,"getTag");
+        Object is = invokeStatic(asNMSCopy, item);
+        Object tag = invoke(is, getTag);
 
-        if(tag != null) { return tag; }
+        if (tag != null) {
+            return tag;
+        }
 
-        try { return Ref.getClass("net.minecraft.server."+ Ref.version()+".NBTTagCompound").newInstance(); }
-        catch (IllegalAccessException | InstantiationException e) { System.out.println("Error while getting nbtTag of " + item.getType().name() + ":"); e.printStackTrace(); return null;}
+        try {
+            return nbtTagCompound.getDeclaredConstructor().newInstance();
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+            System.out.println("Error while getting nbtTag of " + item.getType().name() + ":");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public boolean hasNBTTags() {
-        Object itemstack = Ref.invokeNulled(Ref.method(Ref.craft("inventory.CraftItemStack"), "asNMSCopy", ItemStack.class), item);
-        return (boolean) Ref.invoke(itemstack,"hasTag");
+        Object is = invokeStatic(asNMSCopy, item);
+        return (boolean) invoke(is, hasTag);
     }
 
-    public void setString(String tagName, String tagValue) { set(tagName, tagValue, String.class, "String"); }
-    public void setInt(String tagName, int tagValue) { set(tagName, tagValue, int.class, "Int"); }
-    public void setBoolean(String tagName, boolean tagValue) { set(tagName, tagValue, boolean.class, "Boolean"); }
-    public void setDouble(String tagName, double tagValue) { set(tagName, tagValue, double.class, "Double"); }
+    public void setString(String tagName, String tagValue) {
+        set(tagName, tagValue, setStringMethod);
+    }
 
-    private void set(String tagName, Object tagValue, Class type, String n) {
-        Object itemstack = Ref.invokeNulled(Ref.method(Ref.craft("inventory.CraftItemStack"), "asNMSCopy", ItemStack.class), item);
+    public void setInt(String tagName, int tagValue) {
+        set(tagName, tagValue, setIntMethod);
+    }
+
+    public void setBoolean(String tagName, boolean tagValue) {
+        set(tagName, tagValue, setBooleanMethod);
+    }
+
+    public void setDouble(String tagName, double tagValue) {
+        set(tagName, tagValue, setDoubleMethod);
+    }
+
+    private void set(String tagName, Object tagValue, Method method) {
+        Object is = invokeStatic(asNMSCopy, item);
         Object nbtTags = getNBTTags();
 
-        Ref.invoke(nbtTags, Ref.method(Ref.nms("NBTTagCompound"), "set" + n, String.class, type), tagName, tagValue);
-        Ref.invoke(itemstack, Ref.method(Ref.nms("ItemStack"), "setTag", Ref.nms("NBTTagCompound")), nbtTags);
-        item.setItemMeta((ItemMeta) Ref.invokeNulled(Ref.method(Ref.craft("inventory.CraftItemStack"), "getItemMeta", Ref.nms("ItemStack")), itemstack));
+        invoke(nbtTags, method, tagName, tagValue);
+        invoke(is, setTag, nbtTags);
+        item.setItemMeta((ItemMeta) invokeStatic(getItemMeta, is));
     }
 
-    public String getString(String tagName) { return get(tagName, "String") + ""; }
-    public int getInt(String tagName) { return (int)get(tagName, "Int"); }
-    public boolean getBoolean(String tagName) { return (boolean)get(tagName, "Boolean"); }
-    public double getDouble(String tagName) { return (double)get(tagName, "Double"); }
+    public String getString(String tagName) {
+        return get(tagName, getStringMethod) + "";
+    }
 
-    private Object get(String tagName, String n) {
-        return Ref.invoke(getNBTTags(), Ref.method(Ref.nms("NBTTagCompound"), "get" + n, String.class), tagName);
+    public int getInt(String tagName) {
+        return (int) get(tagName, getIntMethod);
+    }
+
+    public boolean getBoolean(String tagName) {
+        return (boolean) get(tagName, getBooleanMethod);
+    }
+
+    public double getDouble(String tagName) {
+        return (double) get(tagName, getDoubleMethod);
+    }
+
+    private Object get(String tagName, Method method) {
+        return invoke(getNBTTags(), method, tagName);
     }
 
 }
