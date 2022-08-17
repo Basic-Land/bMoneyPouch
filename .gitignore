@@ -1,9 +1,18 @@
-out/
+# User-specific stuff
 .idea/
-*.iml
+.gradle/
 .github/
+
 target/
-/bin/
-.classpath
-.project
-.settings/
+build/
+gradle/
+
+gradlew
+gradlew.bat
+
+*.iml
+*.ipr
+*.iws
+
+# Compiled class file
+*.class

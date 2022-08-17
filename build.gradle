@@ -1,0 +1,133 @@
+group 'bMoneyPouch'
+apply plugin: 'java'
+apply plugin: 'base'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'maven-publish'
+
+version = "4.5.5"
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    shadowJar {
+        archiveName = "${project.name}.jar"
+        destinationDir = file("../archive/")
+    }
+
+    build {
+        dependsOn shadowJar
+    }
+}
+
+repositories {
+
+    mavenLocal()
+    mavenCentral()
+
+    maven {
+        url 'https://jitpack.io'
+    }
+
+    maven {
+        url 'https://repo.codemc.org/repository/maven-public'
+    }
+
+    maven {
+        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+
+    maven {
+        url 'http://nexus.basicland.cz:8081/repository/dev-nms/'
+        allowInsecureProtocol = true
+    }
+
+    maven {
+        url 'http://nexus.basicland.cz:8081/repository/dev-public/'
+        allowInsecureProtocol = true
+    }
+
+    maven {
+        url 'http://nexus.basicland.cz:8081/repository/dev-private/'
+        allowInsecureProtocol = true
+        credentials {
+            username "dev"
+            password "mandarinka"
+        }
+    }
+}
+
+dependencies {
+    // Bungee jars
+    compileOnly 'net.md-5:bungeecord-api:1.19'
+
+    // Spigot jars
+    compileOnly 'org.spigotmc:spigot:1.16.5'
+    compileOnly 'net.minecraft:server:1.16.5'
+
+    // Plugin Hooks
+    compileOnly "com.github.MilkBowl:VaultAPI:1.7"
+    //compileOnly "com.github.LemmoTresto:LemonMobCoins:master-9a09318cf5-1"
+    //compileOnly "org.bstats:bstats-bukkit-lite:1.8"
+
+    // BL plugins
+    compileOnly "cz.devfire:bantidupe:1.5"
+    compileOnly "cz.basicland:bantidupe:2.0.1"
+}
+
+jar {
+    // def ver = version
+    // Integer increment = ver.substring(ver.lastIndexOf('.') + 1).toInteger() + 1
+    // String firstNumber = ver.substring(0, ver.lastIndexOf("."))
+    // String result = buildFile.getText().replaceFirst("version = \"$version\"", "version = \"" + firstNumber + "." + increment + "\"")
+    // buildFile.setText(result)
+
+    processResources {
+        outputs.upToDateWhen {false}
+
+        eachFile { details ->
+            if (details.name.contentEquals('plugin.yml')) {
+                filter { line ->
+                    line.replace('${project.version}', version)
+                }
+            }
+        }
+    }
+}
+
+shadowJar {
+    dependsOn(jar)
+
+    archiveName = rootProject.name +"-"+ rootProject.version +".jar"
+    destinationDir = file("./target/")
+    from sourceSets.getByName("main").output
+    configurations = [project.configurations.getByName("runtimeClasspath")]
+}
+
+build {
+    dependsOn shadowJar
+    dependsOn publish
+}
+
+publish.shouldRunAfter shadowJar
+shadowJar.shouldRunAfter build
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+}

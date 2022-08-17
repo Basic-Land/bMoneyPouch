@@ -10,12 +10,13 @@ import com.leonardobishop.moneypouch.itemgetter.ItemGetter;
 import com.leonardobishop.moneypouch.itemgetter.ItemGetterLatest;
 import com.leonardobishop.moneypouch.itemgetter.ItemGetter_1_13;
 import com.leonardobishop.moneypouch.itemgetter.ItemGetter_Late_1_8;
+import com.leonardobishop.moneypouch.other.Ref;
+import com.leonardobishop.moneypouch.other.Utils;
 import com.leonardobishop.moneypouch.title.Title;
 import com.leonardobishop.moneypouch.title.Title_Bukkit;
 import com.leonardobishop.moneypouch.title.Title_BukkitNoTimings;
 import com.leonardobishop.moneypouch.title.Title_Other;
 import org.apache.commons.lang.StringUtils;
-import org.bstats.bukkit.MetricsLite;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -25,7 +26,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.spongepowered.api.profile.GameProfile;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -72,6 +72,8 @@ public class MoneyPouch extends JavaPlugin {
         if (!directory.exists() && !directory.isDirectory()) {
             directory.mkdir();
         }
+
+        Ref.init(Ref.ServerType.SPIGOT, Utils.getServerVersion());
 
         File config = new File(this.getDataFolder() + File.separator + "config.yml");
         if (!config.exists()) {
@@ -127,11 +129,6 @@ public class MoneyPouch extends JavaPlugin {
         }
 
         this.setupTitle();
-
-        MetricsLite metrics = new MetricsLite(this, 9927);
-        if (metrics.isEnabled()) {
-            super.getLogger().info("Metrics started. This can be disabled at /plugins/bStats/config.yml.");
-        }
 
         menuController = new MenuController(this);
 

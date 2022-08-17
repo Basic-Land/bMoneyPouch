@@ -7,6 +7,8 @@ import com.leonardobishop.moneypouch.economytype.InvalidEconomyType;
 import com.leonardobishop.moneypouch.exceptions.PaymentFailedException;
 import com.leonardobishop.moneypouch.other.NBT;
 import com.leonardobishop.moneypouch.title.Title_Other;
+import cz.basicland.bantidupe.bAntiDupe;
+import cz.basicland.bantidupe.bAntiDupeAPI;
 import cz.devfire.bantidupe.AntiDupe;
 import cz.devfire.bantidupe.AntiDupeAPI;
 import cz.devfire.bantidupe.Other.Utils;
@@ -71,21 +73,40 @@ public class UseEvent implements Listener {
                 }
 
                 if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
-                    AntiDupeAPI api = AntiDupe.getApi();
+                    try {
+                        bAntiDupeAPI api = bAntiDupe.getApi();
 
-                    if (api.isDuped(player.getItemInHand())) {
-                        event.setCancelled(true);
-                        api.warnPlayer(event.getPlayer());
-                        api.removeItem(player.getItemInHand());
-                        event.getPlayer().getInventory().remove(event.getPlayer().getItemInHand());
-                        return;
-                    } else if (!api.hasUid(player.getItemInHand())) {
-                        event.setCancelled(true);
-                        event.getPlayer().sendMessage(Utils.cc("&c&lServer &8&l» &7Nenasel jsem UID predmetu. Kontaktuj prosim administratora."));
-                        return;
+                        if (api.isDuped(player.getItemInHand())) {
+                            event.setCancelled(true);
+                            api.warnPlayer(event.getPlayer());
+                            api.removeUniqueId(player.getItemInHand(), false);
+                            event.getPlayer().getInventory().remove(event.getPlayer().getItemInHand());
+                            return;
+                        } else if (!api.hasUniqueId(player.getItemInHand())) {
+                            event.setCancelled(true);
+                            event.getPlayer().sendMessage(Utils.cc("&c&lServer &8&l» &7Nenasel jsem UID predmetu. Kontaktuj prosim administratora."));
+                            return;
+                        }
+
+                        api.removeUniqueId(player.getItemInHand(), false);
                     }
+                    catch (Exception e) {
+                        AntiDupeAPI api = AntiDupe.getApi();
 
-                    api.removeItem(player.getItemInHand());
+                        if (api.isDuped(player.getItemInHand())) {
+                            event.setCancelled(true);
+                            api.warnPlayer(event.getPlayer());
+                            api.removeItem(player.getItemInHand());
+                            event.getPlayer().getInventory().remove(event.getPlayer().getItemInHand());
+                            return;
+                        } else if (!api.hasUid(player.getItemInHand())) {
+                            event.setCancelled(true);
+                            event.getPlayer().sendMessage(Utils.cc("&c&lServer &8&l» &7Nenasel jsem UID predmetu. Kontaktuj prosim administratora."));
+                            return;
+                        }
+
+                        api.removeItem(player.getItemInHand());
+                    }
                 }
 
                 String permission = "moneypouch.pouches." + p.getId();
