@@ -4,27 +4,8 @@ name: bMoneyPouch
 version: ${project.version}
 
 main: com.leonardobishop.moneypouch.MoneyPouch
-author: LMBishop, Firestone82, wj8
-softdepend: [Vault, TokenManager, LemonMobCoins, bAntiDupe]
+author: LMBishop, Firestone82, wj8, dan28
+depend:
+  - bLibs
+  - Vault
 api-version: "1.13"  # enables the new material thing even though the plugin fully supports 1.8
-
-commands:
-  moneypouch:
-    description: Main command for MoneyPouch
-    usage: /moneypouch
-    permission: moneypouch.admin
-    aliases: [mp]
-  moneypouchshop:
-    description: Shop command for MoneyPouch
-    usage: /moneypouchshop
-    permission: moneypouch.shop
-    aliases: [mpshop]
-  moneypouchadmin:
-    description: Admin command for MoneyPouch
-    usage: /moneypouchshop
-    permission: moneypouch.admin
-    aliases: [mpa]
-
-permissions:
-  moneypouch.admin:
-    description: Permission for the base command

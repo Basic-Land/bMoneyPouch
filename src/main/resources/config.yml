@@ -88,22 +88,6 @@ error-handling:
   # The message 'invalid-pouch' will be sent to the player.
   prevent-opening-invalid-pouches: true
 
-# /mpshop
-shop:
-  enabled: true
-  ui-title: "Pouch Shop"
-  purchasable-items:
-    xp-1:
-      price: 4000
-      currency: "VAULT"
-    vault-1:
-      price: 5500
-      currency: "VAULT"
-  append-to-lore:
-    - "&8==========================="
-    - "&aPrice: &e%prefix%%price%%suffix%"
-    - "&aClick to purchase"
-
 # Economy prefixes and suffixes
 economy:
   xp:
@@ -112,12 +96,6 @@ economy:
   vault:
     prefix: "$"
     suffix: ""
-  lemonmobcoins:
-    prefix: ""
-    suffix: " Mob Coins"
-  examplecustomeconomy: # please see the "customeconomytype" directory for more info
-    prefix: ""
-    suffix: " Diamonds"
 
 # Messages here
 messages:

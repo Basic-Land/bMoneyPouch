@@ -2,32 +2,49 @@ package com.leonardobishop.moneypouch.commands;
 
 import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
-import com.leonardobishop.moneypouch.economytype.EconomyType;
-import cz.basicland.bantidupe.bAntiDupe;
-import cz.devfire.bantidupe.AntiDupe;
+import cz.basicland.blibs.spigot.commands.LCommand;
+import cz.basicland.blibs.spigot.hooks.Check;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-public class MoneyPouchBaseCommand implements CommandExecutor, TabCompleter {
+public class MoneyPouchBaseCommand implements LCommand {
 
-    private MoneyPouch plugin;
+    private final MoneyPouch plugin;
 
     public MoneyPouchBaseCommand(MoneyPouch plugin) {
         this.plugin = plugin;
     }
 
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    @Override
+    public String getLabel() {
+        return "moneypouch";
+    }
+
+    @Override
+    public String getUsage() {
+        return "/moneypouch";
+    }
+
+    @Override
+    public String getPermission() {
+        return "moneypouch.admin";
+    }
+
+    @Override
+    public String[] aliases() {
+        return new String[]{"mp"};
+    }
+
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (args.length > 0) {
             Player target = null;
 
@@ -47,29 +64,29 @@ public class MoneyPouchBaseCommand implements CommandExecutor, TabCompleter {
                 try {
                     requested = Integer.parseInt(args[2]);
                 } catch (Exception e) {
-                    sender.sendMessage(ChatColor.RED + "Invalid integer");
+                    sender.sendMessage("§dInvalid integer");
                     return true;
                 }
                 if (requested > 64) {
-                    sender.sendMessage(ChatColor.RED + "Warning: The amount requested is above 64. This may result in strange behaviour.");
+                    sender.sendMessage("§dWarning: The amount requested is above 64. This may result in strange behaviour.");
                 }
                 amount = requested;
             }
 
             if (target == null) {
-                sender.sendMessage(ChatColor.RED + "The specified player could not be found.");
+                sender.sendMessage("§dThe specified player could not be found.");
                 return true;
             }
 
             Pouch pouch = null;
-            for (Pouch p: plugin.getPouches()) {
+            for (Pouch p : plugin.getPouches()) {
                 if (p.getId().equals(args[0])) {
                     pouch = p;
                     break;
                 }
             }
             if (pouch == null) {
-                sender.sendMessage(ChatColor.RED + "The pouch " + ChatColor.DARK_RED + args[0] + ChatColor.RED + " could not be found.");
+                sender.sendMessage("§dThe pouch §4" + args[0] + "§d could not be found.");
                 return true;
             }
             if (target.getInventory().firstEmpty() == -1) {
@@ -78,40 +95,31 @@ public class MoneyPouchBaseCommand implements CommandExecutor, TabCompleter {
             }
 
             for (int i = 0; i < amount; i++) {
-                if (Bukkit.getPluginManager().isPluginEnabled("bAntiDupe")) {
-                    try {
-                        target.getInventory().addItem(bAntiDupe.getApi().addUniqueId(pouch.getItemStack().clone()));
-                    }
-                    catch (Exception e) {
-                        target.getInventory().addItem(AntiDupe.getApi().saveItem(pouch.getItemStack().clone()));
-                    }
-                } else {
-                    target.getInventory().addItem(pouch.getItemStack());
-                }
+                target.getInventory().addItem(Check.addStack(new ItemStack(pouch.getItemStack().getStack())));
             }
 
             sender.sendMessage(plugin.getMessage(MoneyPouch.Message.GIVE_ITEM).replace("%player%",
-                    target.getName()).replace("%item%", pouch.getItemStack().getItemMeta().getDisplayName()));
-            if (plugin.getConfig().getBoolean("options.show-receive-message", true)) {
+                    target.getName()).replace("%item%", pouch.getItemStack().getTitle()));
+            if (plugin.getCfg().getBoolean("options.show-receive-message", true)) {
                 target.sendMessage(plugin.getMessage(MoneyPouch.Message.RECEIVE_ITEM).replace("%player%",
-                        target.getName()).replace("%item%", pouch.getItemStack().getItemMeta().getDisplayName()));
+                        target.getName()).replace("%item%", pouch.getItemStack().getTitle()));
             }
             return true;
         }
 
-        sender.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Money Pouch (ver " + plugin.getDescription().getVersion() + ")");
-        sender.sendMessage(ChatColor.GRAY + "<> = required, [] = optional");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mp :" + ChatColor.GRAY + " view this menu");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mp <tier> [player] [amount] :" + ChatColor.GRAY + " give <item> to [player] (or self if blank)");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mpshop :" + ChatColor.GRAY + " open the shop");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mpa list :" + ChatColor.GRAY + " list all pouches");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mpa economies :" + ChatColor.GRAY + " list all economies");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "/mpa reload :" + ChatColor.GRAY + " reload the config");
+        sender.sendMessage("§5&l Money Pouch (ver " + plugin.getDescription().getVersion() + ")");
+        sender.sendMessage("§7<> = required, [] = optional");
+        sender.sendMessage("§d/mp :§7 view this menu");
+        sender.sendMessage("§d/mp <tier> [player] [amount] :§7 give <item> to [player] (or self if blank)");
+        sender.sendMessage("§d/mpshop :§7 open the shop");
+        sender.sendMessage("§d/mpa list :§7 list all pouches");
+        sender.sendMessage("§d/mpa economies :§7 list all economies");
+        sender.sendMessage("§d/mpa reload :§7 reload the config");
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (sender instanceof Player) {
             if (args.length == 1) {
                 List<String> pouchNames = new ArrayList<>();

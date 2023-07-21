@@ -2,45 +2,30 @@ package com.leonardobishop.moneypouch;
 
 import com.leonardobishop.moneypouch.commands.MoneyPouchAdminCommand;
 import com.leonardobishop.moneypouch.commands.MoneyPouchBaseCommand;
-import com.leonardobishop.moneypouch.commands.MoneyPouchShopCommand;
-import com.leonardobishop.moneypouch.economytype.*;
+import com.leonardobishop.moneypouch.economytype.EconomyType;
+import com.leonardobishop.moneypouch.economytype.VaultEconomyType;
+import com.leonardobishop.moneypouch.economytype.XPEconomyType;
 import com.leonardobishop.moneypouch.events.UseEvent;
-import com.leonardobishop.moneypouch.gui.MenuController;
-import com.leonardobishop.moneypouch.itemgetter.ItemGetter;
-import com.leonardobishop.moneypouch.itemgetter.ItemGetterLatest;
-import com.leonardobishop.moneypouch.itemgetter.ItemGetter_1_13;
-import com.leonardobishop.moneypouch.itemgetter.ItemGetter_Late_1_8;
-import com.leonardobishop.moneypouch.other.Ref;
-import com.leonardobishop.moneypouch.other.Utils;
-import com.leonardobishop.moneypouch.title.Title;
-import com.leonardobishop.moneypouch.title.Title_Bukkit;
-import com.leonardobishop.moneypouch.title.Title_BukkitNoTimings;
-import com.leonardobishop.moneypouch.title.Title_Other;
-import org.apache.commons.lang.StringUtils;
+import cz.basicland.blibs.shared.dataholder.Config;
+import cz.basicland.blibs.spigot.BLibs;
+import cz.basicland.blibs.spigot.commands.CommandHandler;
+import cz.basicland.blibs.spigot.listeners.ListenerHandler;
+import cz.basicland.blibs.spigot.utils.Version;
+import cz.basicland.blibs.spigot.utils.item.CustomItemStack;
+import cz.basicland.blibs.spigot.utils.item.ItemUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MoneyPouch extends JavaPlugin {
 
-    private Title titleHandle;
-    private ItemGetter itemGetter;
-    private MenuController menuController;
-
-    private HashMap<String, EconomyType> economyTypes = new HashMap<>();
+    private final HashMap<String, EconomyType> economyTypes = new HashMap<>();
+    private final ArrayList<Pouch> pouches = new ArrayList<>();
+    private Config config;
 
     public EconomyType getEconomyType(String id) {
         if (id == null) {
@@ -53,215 +38,62 @@ public class MoneyPouch extends JavaPlugin {
         return economyTypes;
     }
 
-    public boolean registerEconomyType(String id, EconomyType type) {
+    public void registerEconomyType(String id, EconomyType type) {
         if (economyTypes.containsKey(id)) {
             super.getLogger().warning("Economy type registration " + type.toString() + " ignored due to conflicting ID '" + id + "' with economy type " + economyTypes.get(id).toString());
-            return false;
+            return;
         }
         economyTypes.put(id, type);
-        return true;
     }
-
-    private ArrayList<Pouch> pouches = new ArrayList<>();
 
     @Override
     public void onEnable() {
-        executeVersionSpecificActions();
+        CommandHandler commandHandler = BLibs.getApi().getCommandHandler();
+        ListenerHandler listenerHandler = BLibs.getApi().getListenerHandler();
+        config = Config.loadFromPlugin(this, "config.yml", "config.yml").saveYaml();
+        getLogger().info("Your server is running version " + Version.CURRENT.getName() + ".");
 
-        File directory = new File(String.valueOf(this.getDataFolder()));
-        if (!directory.exists() && !directory.isDirectory()) {
-            directory.mkdir();
-        }
-
-        Ref.init(Ref.ServerType.SPIGOT, Utils.getServerVersion());
-
-        File config = new File(this.getDataFolder() + File.separator + "config.yml");
-        if (!config.exists()) {
-            try {
-                config.createNewFile();
-                try (InputStream in = MoneyPouch.class.getClassLoader().getResourceAsStream("config.yml")) {
-                    OutputStream out = new FileOutputStream(config);
-                    byte[] buffer = new byte[1024];
-                    int length = in.read(buffer);
-                    while (length != -1) {
-                        out.write(buffer, 0, length);
-                        length = in.read(buffer);
-                    }
-                } catch (IOException e) {
-                    super.getLogger().severe("Failed to create config.");
-                    e.printStackTrace();
-                    super.getLogger().severe(ChatColor.RED + "...please delete the MoneyPouch directory and try RESTARTING (not reloading).");
-                }
-            } catch (IOException e) {
-                super.getLogger().severe("Failed to create config.");
-                e.printStackTrace();
-                super.getLogger().severe(ChatColor.RED + "...please delete the MoneyPouch directory and try RESTARTING (not reloading).");
-            }
-        }
-
-        File pouchDirectory = new File(this.getDataFolder() + File.separator + "customeconomytype");
-        if (!pouchDirectory.exists() && !pouchDirectory.isDirectory()) {
-            pouchDirectory.mkdir();
-
-            ArrayList<String> examples = new ArrayList<>();
-            examples.add("examplecustomeconomy.yml");
-            examples.add("README.txt");
-
-            for (String name : examples) {
-                File file = new File(this.getDataFolder() + File.separator + "customeconomytype" + File.separator + name);
-                try {
-                    file.createNewFile();
-                    try (InputStream in = this.getResource("customeconomytype/" + name)) {
-                        OutputStream out = new FileOutputStream(file);
-                        byte[] buffer = new byte[1024];
-                        int lenght = in.read(buffer);
-                        while (lenght != -1) {
-                            out.write(buffer, 0, lenght);
-                            lenght = in.read(buffer);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        this.setupTitle();
-
-        menuController = new MenuController(this);
-
-        registerEconomyType("invalid", new InvalidEconomyType());
-        registerEconomyType("xp", new XPEconomyType(this,   // vv for legacy purposes
-                this.getConfig().getString("economy.xp.prefix", this.getConfig().getString("economy.prefixes.xp", "")),
-                this.getConfig().getString("economy.xp.suffix", this.getConfig().getString("economy.suffixes.xp", " XP"))));
+        registerEconomyType("xp", new XPEconomyType(   // vv for legacy purposes
+                config.getString("economy.xp.prefix", config.getString("economy.prefixes.xp", "")),
+                config.getString("economy.xp.suffix", config.getString("economy.suffixes.xp", " XP"))));
 
 
         if (Bukkit.getServer().getPluginManager().getPlugin("Vault") != null) {
             registerEconomyType("vault", new VaultEconomyType(this,
-                    this.getConfig().getString("economy.vault.prefix", this.getConfig().getString("economy.prefixes.vault", "$")),
-                    this.getConfig().getString("economy.vault.suffix", this.getConfig().getString("economy.suffixes.vault", ""))));
+                    config.getString("economy.vault.prefix", config.getString("economy.prefixes.vault", "$")),
+                    config.getString("economy.vault.suffix", config.getString("economy.suffixes.vault", ""))));
         }
 
-        if (Bukkit.getServer().getPluginManager().getPlugin("LemonMobCoins") != null) {
-            registerEconomyType("lemonmobcoins", new LemonMobCoinsEconomyType(this,
-                    this.getConfig().getString("economy.lemonmobcoins.prefix", ""),
-                    this.getConfig().getString("economy.lemonmobcoins.suffix", " Mob Coins")));
-        }
-
-        super.getServer().getPluginCommand("moneypouch").setExecutor(new MoneyPouchBaseCommand(this));
-        super.getServer().getPluginCommand("moneypouchshop").setExecutor(new MoneyPouchShopCommand(this));
-        super.getServer().getPluginCommand("moneypouchadmin").setExecutor(new MoneyPouchAdminCommand(this));
-        super.getServer().getPluginManager().registerEvents(new UseEvent(this), this);
-        super.getServer().getPluginManager().registerEvents(menuController, this);
+        commandHandler.addCommand(this, new MoneyPouchBaseCommand(this));
+        commandHandler.addCommand(this, new MoneyPouchAdminCommand(this));
+        listenerHandler.addListener(this, new UseEvent(this));
 
         Bukkit.getScheduler().runTask(this, this::reload);
     }
 
+    @NotNull
+    public Config getCfg() {
+        return config;
+    }
+
     public String getMessage(Message message) {
-        return ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("messages."
-                + message.getId(), message.getDef()));
+        return config.getStringCC("messages." + message.getId(), message.getDef());
     }
 
     public ArrayList<Pouch> getPouches() {
         return pouches;
     }
 
-    public Title getTitleHandle() {
-        return titleHandle;
-    }
-
-    private void executeVersionSpecificActions() {
-        String version;
-        try {
-            version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            getLogger().warning("Failed to resolve server version - some features will not work!");
-            itemGetter = new ItemGetter_Late_1_8();
-            return;
-        }
-
-        getLogger().info("Your server is running version " + version + ".");
-        if (version.startsWith("v1_7") || version.startsWith("v1_8") || version.startsWith("v1_9")
-                || version.startsWith("v1_10") || version.startsWith("v1_11") || version.startsWith("v1_12")) {
-            itemGetter = new ItemGetter_Late_1_8();
-        } else if (version.startsWith("v1_13")) {
-            itemGetter = new ItemGetter_1_13();
-        } else {
-            itemGetter = new ItemGetterLatest();
-        }
-    }
-
-    public MenuController getMenuController() {
-        return menuController;
-    }
-
     public void reload() {
-        super.reloadConfig();
-
-        ArrayList<String> custom = new ArrayList<>();
-        for (Map.Entry<String, EconomyType> entry : economyTypes.entrySet()) {
-            if (entry.getValue() instanceof CustomEconomyType) {
-                custom.add(entry.getKey());
-            }
-        }
-        for (String s : custom) {
-            economyTypes.remove(s);
-        }
-
-        FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
-            final URI economyTypeRoot = Paths.get(MoneyPouch.this.getDataFolder() + File.separator + "customeconomytype").toUri();
-
-            @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                File economyTypeFile = new File(path.toUri());
-                URI relativeLocation = economyTypeRoot.relativize(path.toUri());
-
-                if (!economyTypeFile.getName().toLowerCase().endsWith(".yml")) return FileVisitResult.CONTINUE;
-
-                YamlConfiguration config = new YamlConfiguration();
-                // test MP file integrity
-                try {
-                    config.load(economyTypeFile);
-                } catch (Exception ex) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                String id = economyTypeFile.getName().replace(".yml", "");
-
-                if (!StringUtils.isAlphanumeric(id)) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                String command = config.getString("transaction-prize-command");
-
-                if (command == null) command = "";
-
-                CustomEconomyType customEconomyType = new CustomEconomyType(MoneyPouch.this,
-                        MoneyPouch.this.getConfig().getString("economy." + id + ".prefix", ""),
-                        MoneyPouch.this.getConfig().getString("economy." + id + ".suffix", ""),
-                        command);
-
-                registerEconomyType(id, customEconomyType);
-                return FileVisitResult.CONTINUE;
-            }
-        };
-
-        try {
-            Files.walkFileTree(Paths.get(this.getDataFolder() + File.separator + "customeconomytype"), fileVisitor);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        config.reload();
 
         pouches.clear();
-        for (String s : this.getConfig().getConfigurationSection("pouches.tier").getKeys(false)) {
-            ItemStack is = getItemStack("pouches.tier." + s, this.getConfig());
-            String economyTypeId = this.getConfig().getString("pouches.tier." + s + ".options.economytype", "VAULT");
-            String id = s.replace(" ", "_");
-            long priceMin = this.getConfig().getLong("pouches.tier." + s + ".pricerange.from", 0);
-            long priceMax = this.getConfig().getLong("pouches.tier." + s + ".pricerange.to", 0);
-            boolean permissionRequired = this.getConfig().getBoolean("pouches.tier." + s + ".options.permission-required", false);
+        for (String s : config.getKeys("pouches.tier")) {
+            CustomItemStack is = getItemStack("pouches.tier." + s);
+            String economyTypeId = config.getString("pouches.tier." + s + ".options.economytype", "VAULT");
+            long priceMin = config.getLong("pouches.tier." + s + ".pricerange.from", 0);
+            long priceMax = config.getLong("pouches.tier." + s + ".pricerange.to", 0);
+            boolean permissionRequired = config.getBoolean("pouches.tier." + s + ".options.permission-required", false);
 
             EconomyType economyType = getEconomyType(economyTypeId);
             if (economyType == null) {
@@ -269,68 +101,14 @@ public class MoneyPouch extends JavaPlugin {
                 super.getLogger().warning("Pouch with ID " + s + " tried to use an invalid economy type '" + economyTypeId + "'.");
             }
 
-            //shop
-            boolean purchasable = this.getConfig().contains("shop.purchasable-items." + s);
-            if (purchasable) {
-                long price = this.getConfig().getLong("shop.purchasable-items." + s + ".price", 0);
-                String purchaseEconomyId = this.getConfig().getString("shop.purchasable-items." + s + ".currency", "VAULT");
-                EconomyType purchaseEconomy = getEconomyType(purchaseEconomyId);
-
-                if (purchaseEconomy == null) {
-                    purchaseEconomy = getEconomyType("invalid");
-                    super.getLogger().warning("Pouch with ID " + s + " tried to use an invalid currency (for /mpshop) economy type '" + purchaseEconomyId + "'.");
-                }
-
-                ItemStack shopIs = getItemStack("pouches.tier." + s, this.getConfig());
-                ItemMeta shopIsm = shopIs.getItemMeta();
-                List<String> shopIsLore = new ArrayList<>();
-                if (shopIsm.getLore() != null) {
-                    shopIsLore.addAll(shopIsm.getLore());
-                }
-                for (String shopLore : this.getConfig().getStringList("shop.append-to-lore")) {
-                    shopIsLore.add(ChatColor.translateAlternateColorCodes('&', shopLore)
-                            .replace("%price%", String.valueOf(price))
-                            .replace("%prefix%", purchaseEconomy.getPrefix())
-                            .replace("%suffix%", purchaseEconomy.getSuffix()));
-                }
-                shopIsm.setLore(shopIsLore);
-                shopIs.setItemMeta(shopIsm);
-
-                pouches.add(new Pouch(s.replace(" ", "_"), priceMin, priceMax, is, economyType, permissionRequired, purchasable, purchaseEconomy, price, shopIs));
-            } else {
-                pouches.add(new Pouch(s.replace(" ", "_"), priceMin, priceMax, is, economyType, permissionRequired));
-            }
+            pouches.add(new Pouch(s.replace(" ", "_"), priceMin, priceMax, is, economyType, permissionRequired));
         }
     }
 
-    public ItemStack getItemStack(String path, FileConfiguration config) {
-        return itemGetter.getItem(path, config, this);
-    }
-
-    private void setupTitle() {
-        String version;
-        try {
-            version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            titleHandle = new Title_Bukkit();
-            this.getLogger().info("Your server version could not be detected. Titles have been enabled, although they may not work!");
-            return;
-        }
-        getLogger().info("Your server is running version " + version + ".");
-        if (version.startsWith("v1_7")) {
-            titleHandle = new Title_Other();
-        } else if (version.startsWith("v1_8") || version.startsWith("v1_9") || version.startsWith("v1_10")) {
-            titleHandle = new Title_BukkitNoTimings();
-        } else {
-            titleHandle = new Title_Bukkit();
-        }
-        if (titleHandle instanceof Title_Bukkit) {
-            this.getLogger().info("Titles have been enabled.");
-        } else if (titleHandle instanceof Title_BukkitNoTimings) {
-            this.getLogger().info("Titles have been enabled, although they have limited timings.");
-        } else {
-            this.getLogger().info("Titles are not supported for this version.");
-        }
+    public CustomItemStack getItemStack(String path) {
+        CustomItemStack stack = ItemUtils.get(config, path);
+        stack.setString("moneyPouch", path.split("\\.")[2]);
+        return stack;
     }
 
     public enum Message {
@@ -349,8 +127,8 @@ public class MoneyPouch extends JavaPlugin {
         SHOP_DISABLED("shop-disabled", "&cThe pouch shop is disabled."),
         NO_PERMISSION("no-permission", "&cYou cannot open this pouch.");
 
-        private String id;
-        private String def; // (default message if undefined)
+        private final String id;
+        private final String def; // (default message if undefined)
 
         Message(String id, String def) {
             this.id = id;
