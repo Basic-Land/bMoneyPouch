@@ -26,8 +26,29 @@ public class UseEvent implements Listener {
     private final MoneyPouch plugin;
     private final ArrayList<UUID> opening = new ArrayList<>();
 
+    final String prefixColour;
+    final String suffixColour;
+    final String revealColour;
+    final String obfuscateColour;
+    final String obfuscateDigitChar;
+    final String obfuscateDelimiterChar;
+    final boolean delimiter;
+    final boolean revealComma;
+    final boolean reversePouchReveal;
+
+
     public UseEvent(MoneyPouch plugin) {
         this.plugin = plugin;
+
+        prefixColour = plugin.getCfg().getStringCC("pouches.title.prefix-colour");
+        suffixColour = plugin.getCfg().getStringCC("pouches.title.suffix-colour");
+        revealColour = plugin.getCfg().getStringCC("pouches.title.reveal-colour");
+        obfuscateColour = plugin.getCfg().getStringCC("pouches.title.obfuscate-colour");
+        obfuscateDigitChar = plugin.getCfg().getString("pouches.title.obfuscate-digit-char", "#");
+        obfuscateDelimiterChar = ",";
+        delimiter = plugin.getCfg().getBoolean("pouches.title.format.enabled", false);
+        revealComma = plugin.getCfg().getBoolean("pouches.title.format.reveal-comma", false);
+        reversePouchReveal = plugin.getCfg().getBoolean("reverse-pouch-reveal");
     }
 
     @EventHandler
@@ -90,17 +111,7 @@ public class UseEvent implements Listener {
         long random = ThreadLocalRandom.current().nextLong(p.getMinRange(), p.getMaxRange());
         playSound(player, plugin.getCfg().getString("pouches.sound.opensound"));
         new BukkitRunnable() {
-            final String prefixColour = plugin.getCfg().getStringCC("pouches.title.prefix-colour");
-            final String suffixColour = plugin.getCfg().getStringCC("pouches.title.suffix-colour");
-            final String revealColour = plugin.getCfg().getStringCC("pouches.title.reveal-colour");
-            final String obfuscateColour = plugin.getCfg().getStringCC("pouches.title.obfuscate-colour");
-            final String obfuscateDigitChar = plugin.getCfg().getString("pouches.title.obfuscate-digit-char", "#");
-            final String obfuscateDelimiterChar = ",";
-            final boolean delimiter = plugin.getCfg().getBoolean("pouches.title.format.enabled", false);
-            final boolean revealComma = plugin.getCfg().getBoolean("pouches.title.format.reveal-comma", false);
             final String number = (delimiter ? (new DecimalFormat("#,###").format(random)) : String.valueOf(random));
-            final boolean reversePouchReveal = plugin.getCfg().getBoolean("reverse-pouch-reveal");
-
             int position = 0;
             boolean complete = false;
 

@@ -13,19 +13,22 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 repositories {
     mavenLocal()
     maven { url = uri('https://oss.sonatype.org/content/groups/public/') }
-    maven { url = uri('http://nexus.basicland.cz:8081/repository/dev-nms/')
+    maven {
+        url = uri('http://nexus.basicland.cz:8081/repository/dev-nms/')
         allowInsecureProtocol(true)
     }
-    maven { url = uri('http://nexus.basicland.cz:8081/repository/dev-public/')
+    maven {
+        url = uri('http://nexus.basicland.cz:8081/repository/dev-public/')
         allowInsecureProtocol(true)
     }
     maven { url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/') }
-    maven { url = uri('https://repo.codemc.org/repository/maven-public/')}
+    maven { url = uri('https://repo.codemc.org/repository/maven-public/') }
     maven { url = uri('https://jitpack.io') }
     maven { url = uri('https://libraries.minecraft.net/') }
     maven { url = uri('https://repo.maven.apache.org/maven2/') }
     maven { url = uri('https://repo.extendedclip.com/content/repositories/placeholderapi/') }
-    maven { url 'http://nexus.basicland.cz:8081/repository/dev-private/'
+    maven {
+        url 'http://nexus.basicland.cz:8081/repository/dev-private/'
         allowInsecureProtocol = true
         credentials {
             username "dev"
@@ -61,7 +64,7 @@ jar {
 }
 
 processResources {
-    outputs.upToDateWhen {false}
+    outputs.upToDateWhen { false }
     eachFile { details ->
         if (details.name.contentEquals('plugin.yml')) {
             filter { line ->

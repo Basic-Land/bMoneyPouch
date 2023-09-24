@@ -2,7 +2,6 @@ package com.leonardobishop.moneypouch;
 
 import com.leonardobishop.moneypouch.economytype.EconomyType;
 import cz.basicland.blibs.spigot.utils.item.CustomItemStack;
-import org.bukkit.inventory.ItemStack;
 
 public class Pouch {
 
