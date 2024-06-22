@@ -4,6 +4,10 @@ import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
 import cz.basicland.blibs.spigot.hooks.Check;
 import cz.basicland.blibs.spigot.utils.item.NBT;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.util.Ticks;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -40,10 +44,10 @@ public class UseEvent implements Listener {
     public UseEvent(MoneyPouch plugin) {
         this.plugin = plugin;
 
-        prefixColour = plugin.getCfg().getStringCC("pouches.title.prefix-colour");
-        suffixColour = plugin.getCfg().getStringCC("pouches.title.suffix-colour");
-        revealColour = plugin.getCfg().getStringCC("pouches.title.reveal-colour");
-        obfuscateColour = plugin.getCfg().getStringCC("pouches.title.obfuscate-colour");
+        prefixColour = plugin.getCfg().getString("pouches.title.prefix-colour");
+        suffixColour = plugin.getCfg().getString("pouches.title.suffix-colour");
+        revealColour = plugin.getCfg().getString("pouches.title.reveal-colour");
+        obfuscateColour = plugin.getCfg().getString("pouches.title.obfuscate-colour");
         obfuscateDigitChar = plugin.getCfg().getString("pouches.title.obfuscate-digit-char", "#");
         obfuscateDelimiterChar = ",";
         delimiter = plugin.getCfg().getBoolean("pouches.title.format.enabled", false);
@@ -67,12 +71,12 @@ public class UseEvent implements Listener {
         if (id == null) return;
 
         for (Pouch p : plugin.getPouches()) {
-            if (!id.equalsIgnoreCase(p.getId())) continue;
+            if (!id.equalsIgnoreCase(p.id())) continue;
 
             event.setCancelled(true);
 
             if (opening.contains(player.getUniqueId())) {
-                player.sendMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
+                player.sendRichMessage(plugin.getMessage(MoneyPouch.Message.ALREADY_OPENING));
                 return;
             }
 
@@ -81,9 +85,9 @@ public class UseEvent implements Listener {
                 return;
             }
 
-            String permission = "moneypouch.pouches." + p.getId();
-            if (p.isPermissionRequired() && !player.hasPermission(permission)) {
-                player.sendMessage(plugin.getMessage(MoneyPouch.Message.NO_PERMISSION));
+            String permission = "moneypouch.pouches." + p.id();
+            if (p.permissionRequired() && !player.hasPermission(permission)) {
+                player.sendRichMessage(plugin.getMessage(MoneyPouch.Message.NO_PERMISSION));
                 return;
             }
 
@@ -108,7 +112,7 @@ public class UseEvent implements Listener {
 
     private void usePouch(Player player, Pouch p) {
         opening.add(player.getUniqueId());
-        long random = ThreadLocalRandom.current().nextLong(p.getMinRange(), p.getMaxRange());
+        long random = ThreadLocalRandom.current().nextLong(p.minRange(), p.maxRange());
         playSound(player, plugin.getCfg().getString("pouches.sound.opensound"));
         new BukkitRunnable() {
             final String number = (delimiter ? (new DecimalFormat("#,###").format(random)) : String.valueOf(random));
@@ -119,9 +123,9 @@ public class UseEvent implements Listener {
             public void run() {
                 if (player.isOnline()) {
                     playSound(player, plugin.getCfg().getString("pouches.sound.revealsound"));
-                    String prefix = prefixColour + p.getEconomyType().getPrefix();
+                    String prefix = prefixColour + p.economyType().getPrefix();
                     StringBuilder viewedTitle = new StringBuilder();
-                    String suffix = suffixColour + p.getEconomyType().getSuffix();
+                    String suffix = suffixColour + p.economyType().getSuffix();
                     for (int i = 0; i < position; i++) {
                         if (reversePouchReveal) {
                             viewedTitle.insert(0, number.charAt(number.length() - i - 1)).insert(0, revealColour);
@@ -142,20 +146,24 @@ public class UseEvent implements Listener {
                                 if (revealComma) {
                                     viewedTitle.insert(0, at).insert(0, revealColour);
                                 } else
-                                    viewedTitle.insert(0, obfuscateDelimiterChar).insert(0, "§k").insert(0, obfuscateColour);
+                                    viewedTitle.insert(0, "</obfuscated>").insert(0, obfuscateDelimiterChar).insert(0, "<obfuscated>").insert(0, obfuscateColour);
                             } else
-                                viewedTitle.insert(0, obfuscateDigitChar).insert(0, "§k").insert(0, obfuscateColour);
+                                viewedTitle.insert(0, "</obfuscated>").insert(0, obfuscateDigitChar).insert(0, "<obfuscated>").insert(0, obfuscateColour);
                         } else {
                             char at = number.charAt(i);
                             if (at == ',') {
                                 if (revealComma) viewedTitle.append(revealColour).append(at);
                                 else
-                                    viewedTitle.append(obfuscateColour).append("§k").append(obfuscateDelimiterChar);
+                                    viewedTitle.append(obfuscateColour).append("<obfuscated>").append(obfuscateDelimiterChar).append("</obfuscated>");
                             } else
-                                viewedTitle.append(obfuscateColour).append("§k").append(obfuscateDigitChar);
+                                viewedTitle.append(obfuscateColour).append("<obfuscated>").append(obfuscateDigitChar).append("</obfuscated>");
                         }
                     }
-                    player.sendTitle(prefix + viewedTitle + suffix, plugin.getCfg().getStringCC("pouches.title.subtitle"), 0, 50, 20);
+
+                    Component main = MiniMessage.miniMessage().deserialize(prefix + viewedTitle + suffix);
+                    Component sub = MiniMessage.miniMessage().deserialize(plugin.getCfg().getString("pouches.title.subtitle"));
+                    Title.Times times = Title.Times.times(Ticks.duration(0), Ticks.duration(50), Ticks.duration(20));
+                    player.showTitle(Title.title(main, sub, times));
                 } else {
                     position = number.length();
                 }
@@ -168,26 +176,26 @@ public class UseEvent implements Listener {
                     opening.remove(player.getUniqueId());
                     this.cancel();
                     try {
-                        p.getEconomyType().processPayment(player, random);
+                        p.economyType().processPayment(player, random);
                         if (player.isOnline()) {
                             playSound(player, plugin.getCfg().getString("pouches.sound.endsound"));
-                            player.sendMessage(plugin.getMessage(MoneyPouch.Message.PRIZE_MESSAGE)
-                                    .replace("%prefix%", p.getEconomyType().getPrefix())
-                                    .replace("%suffix%", p.getEconomyType().getSuffix())
+                            player.sendRichMessage(plugin.getMessage(MoneyPouch.Message.PRIZE_MESSAGE)
+                                    .replace("%prefix%", p.economyType().getPrefix())
+                                    .replace("%suffix%", p.economyType().getSuffix())
                                     .replace("%prize%", NumberFormat.getInstance().format(random)));
                         }
                     } catch (Throwable t) {
                         if (plugin.getCfg().getBoolean("error-handling.log-failed-transactions", true)) {
-                            plugin.getLogger().log(Level.SEVERE, "Failed to process payment from pouch with ID '" + p.getId() + "' for player '" + player.getName()
-                                    + "' of amount " + random + " of economy " + p.getEconomyType().toString() + ": " + t.getMessage());
+                            plugin.getLogger().log(Level.SEVERE, "Failed to process payment from pouch with ID '" + p.id() + "' for player '" + player.getName()
+                                    + "' of amount " + random + " of economy " + p.economyType().toString() + ": " + t.getMessage());
                         }
                         if (player.isOnline()) {
                             if (plugin.getCfg().getBoolean("error-handling.refund-pouch", false)) {
-                                player.getInventory().addItem(p.getItemStack().getStack());
+                                player.getInventory().addItem(p.itemStack().getStack());
                             }
-                            player.sendMessage(plugin.getMessage(MoneyPouch.Message.REWARD_ERROR)
-                                    .replace("%prefix%", p.getEconomyType().getPrefix())
-                                    .replace("%suffix%", p.getEconomyType().getSuffix())
+                            player.sendRichMessage(plugin.getMessage(MoneyPouch.Message.REWARD_ERROR)
+                                    .replace("%prefix%", p.economyType().getPrefix())
+                                    .replace("%suffix%", p.economyType().getSuffix())
                                     .replace("%prize%", NumberFormat.getInstance().format(random)));
                         }
                         t.printStackTrace();

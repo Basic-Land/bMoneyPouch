@@ -2,8 +2,10 @@ package com.leonardobishop.moneypouch.commands;
 
 import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
+import cz.basicland.blibs.shared.utils.StringUtils;
 import cz.basicland.blibs.spigot.commands.LCommand;
 import cz.basicland.blibs.spigot.hooks.Check;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -64,74 +66,70 @@ public class MoneyPouchBaseCommand implements LCommand {
                 try {
                     requested = Integer.parseInt(args[2]);
                 } catch (Exception e) {
-                    sender.sendMessage("§dInvalid integer");
+                    sender.sendRichMessage("<light_purple>Invalid integer");
                     return true;
                 }
                 if (requested > 64) {
-                    sender.sendMessage("§dWarning: The amount requested is above 64. This may result in strange behaviour.");
+                    sender.sendRichMessage("<light_purple>Warning: The amount requested is above 64. This may result in strange behaviour.");
                 }
                 amount = requested;
             }
 
             if (target == null) {
-                sender.sendMessage("§dThe specified player could not be found.");
+                sender.sendRichMessage("<light_purple>The specified player could not be found.");
                 return true;
             }
 
             Pouch pouch = null;
             for (Pouch p : plugin.getPouches()) {
-                if (p.getId().equals(args[0])) {
+                if (p.id().equals(args[0])) {
                     pouch = p;
                     break;
                 }
             }
             if (pouch == null) {
-                sender.sendMessage("§dThe pouch §4" + args[0] + "§d could not be found.");
+                sender.sendRichMessage("<light_purple>The pouch </light_purple><dark_red>" + args[0] + "</dark_red><light_purple> could not be found.");
                 return true;
             }
             if (target.getInventory().firstEmpty() == -1) {
-                sender.sendMessage(plugin.getMessage(MoneyPouch.Message.FULL_INV));
+                sender.sendRichMessage(plugin.getMessage(MoneyPouch.Message.FULL_INV));
                 return true;
             }
 
             for (int i = 0; i < amount; i++) {
-                target.getInventory().addItem(Check.addStack(new ItemStack(pouch.getItemStack().getStack())));
+                target.getInventory().addItem(Check.addStack(new ItemStack(pouch.itemStack().getStack())));
             }
 
-            sender.sendMessage(plugin.getMessage(MoneyPouch.Message.GIVE_ITEM).replace("%player%",
-                    target.getName()).replace("%item%", pouch.getItemStack().getTitle()));
+            sender.sendRichMessage(plugin.getMessage(MoneyPouch.Message.GIVE_ITEM).replace("%player%",
+                    target.getName()).replace("%item%", MiniMessage.miniMessage().serialize(pouch.itemStack().getTitle())));
             if (plugin.getCfg().getBoolean("options.show-receive-message", true)) {
-                target.sendMessage(plugin.getMessage(MoneyPouch.Message.RECEIVE_ITEM).replace("%player%",
-                        target.getName()).replace("%item%", pouch.getItemStack().getTitle()));
+                target.sendRichMessage(plugin.getMessage(MoneyPouch.Message.RECEIVE_ITEM).replace("%player%",
+                        target.getName()).replace("%item%", MiniMessage.miniMessage().serialize(pouch.itemStack().getTitle())));
             }
             return true;
         }
 
-        sender.sendMessage("§5&l Money Pouch (ver " + plugin.getDescription().getVersion() + ")");
-        sender.sendMessage("§7<> = required, [] = optional");
-        sender.sendMessage("§d/mp :§7 view this menu");
-        sender.sendMessage("§d/mp <tier> [player] [amount] :§7 give <item> to [player] (or self if blank)");
-        sender.sendMessage("§d/mpshop :§7 open the shop");
-        sender.sendMessage("§d/mpa list :§7 list all pouches");
-        sender.sendMessage("§d/mpa economies :§7 list all economies");
-        sender.sendMessage("§d/mpa reload :§7 reload the config");
+        sender.sendRichMessage("<bold><dark_purple> Money Pouch (ver " + plugin.getDescription().getVersion() + ")");
+        sender.sendRichMessage("<gray><> = required, [] = optional");
+        sender.sendRichMessage("<light_purple>/mp :</light_purple><gray> view this menu");
+        sender.sendRichMessage("<light_purple>/mp <tier> [player] [amount] :</light_purple><gray> give <item> to [player] (or self if blank)");
+        sender.sendRichMessage("<light_purple>/mpshop :</light_purple><gray> open the shop");
+        sender.sendRichMessage("<light_purple>/mpa list :</light_purple><gray> list all pouches");
+        sender.sendRichMessage("<light_purple>/mpa economies :</light_purple><gray> list all economies");
+        sender.sendRichMessage("<light_purple>/mpa reload :</light_purple><gray> reload the config");
         return true;
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-        if (sender instanceof Player) {
-            if (args.length == 1) {
-                List<String> pouchNames = new ArrayList<>();
-                for (Pouch pouch : plugin.getPouches()) {
-                    pouchNames.add(pouch.getId());
-                }
-                List<String> completions = new ArrayList<>();
-                StringUtil.copyPartialMatches(args[0], pouchNames, completions);
-                Collections.sort(completions);
-                return completions;
+        if (args.length == 1) {
+            List<String> pouchNames = new ArrayList<>();
+            for (Pouch pouch : plugin.getPouches()) {
+                pouchNames.add(pouch.id());
             }
+            return StringUtils.copyMatches(args[0], pouchNames);
         }
-        return null;
+
+        return Collections.emptyList();
     }
 }

@@ -1,7 +1,9 @@
 package com.leonardobishop.moneypouch.economytype;
 
+import lombok.Getter;
 import org.bukkit.entity.Player;
 
+@Getter
 public abstract class EconomyType {
 
     private final String prefix;
@@ -10,14 +12,6 @@ public abstract class EconomyType {
     public EconomyType(String prefix, String suffix) {
         this.prefix = prefix;
         this.suffix = suffix;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public String getSuffix() {
-        return suffix;
     }
 
     /**

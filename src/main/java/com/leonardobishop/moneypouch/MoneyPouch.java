@@ -13,6 +13,7 @@ import cz.basicland.blibs.spigot.listeners.ListenerHandler;
 import cz.basicland.blibs.spigot.utils.Version;
 import cz.basicland.blibs.spigot.utils.item.CustomItemStack;
 import cz.basicland.blibs.spigot.utils.item.ItemUtils;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,9 @@ import java.util.HashMap;
 
 public class MoneyPouch extends JavaPlugin {
 
+    @Getter
     private final HashMap<String, EconomyType> economyTypes = new HashMap<>();
+    @Getter
     private final ArrayList<Pouch> pouches = new ArrayList<>();
     private Config config;
 
@@ -31,10 +34,6 @@ public class MoneyPouch extends JavaPlugin {
             return null;
         }
         return economyTypes.get(id.toLowerCase());
-    }
-
-    public HashMap<String, EconomyType> getEconomyTypes() {
-        return economyTypes;
     }
 
     public void registerEconomyType(String id, EconomyType type) {
@@ -76,11 +75,7 @@ public class MoneyPouch extends JavaPlugin {
     }
 
     public String getMessage(Message message) {
-        return config.getStringCC("messages." + message.getId(), message.getDef());
-    }
-
-    public ArrayList<Pouch> getPouches() {
-        return pouches;
+        return config.getString("messages." + message.getId(), message.getDef());
     }
 
     public void reload() {
@@ -88,7 +83,7 @@ public class MoneyPouch extends JavaPlugin {
 
         pouches.clear();
         for (String s : config.getKeys("pouches.tier")) {
-            CustomItemStack is = getItemStack("pouches.tier." + s);
+            CustomItemStack is = getItemStack("pouches.tier." + s, s);
             String economyTypeId = config.getString("pouches.tier." + s + ".options.economytype", "VAULT");
             long priceMin = config.getLong("pouches.tier." + s + ".pricerange.from", 0);
             long priceMax = config.getLong("pouches.tier." + s + ".pricerange.to", 0);
@@ -104,27 +99,27 @@ public class MoneyPouch extends JavaPlugin {
         }
     }
 
-    public CustomItemStack getItemStack(String path) {
+    public CustomItemStack getItemStack(String path, String name) {
         CustomItemStack stack = ItemUtils.get(config, path);
-        stack.setString("moneyPouch", path.split("\\.")[2]);
+        stack.setString("moneyPouch", name);
         return stack;
     }
 
+    @Getter
     public enum Message {
-
-        FULL_INV("full-inv", "&c%player%'s inventory is full!"),
-        GIVE_ITEM("give-item", "&6Given &e%player% %item%&6."),
-        RECEIVE_ITEM("receive-item", "&6You have been given %item%&6."),
-        PRIZE_MESSAGE("prize-message", "&6You have received &c%prefix%%prize%%suffix%&6!"),
-        ALREADY_OPENING("already-opening", "&c&lServer &8&l» &7Jiz oteviras balicek, vyckej!"),
-        INVALID_POUCH("invalid-pouch", "&cThis pouch is invalid and cannot be opened."),
-        INVENTORY_FULL("inventory-full", "&cYour inventory is full."),
-        REWARD_ERROR("reward-error", "&cYour reward of %prefix%%prize%%suffix% has failed to process. Contact an admin, this has been logged."),
-        PURCHASE_SUCCESS("purchase-success", "&6You have purchased %item%&6 for &c%prefix%%price%%suffix%&6."),
-        PURCHASE_FAIL("purchase-fail", "&cYou do not have &c%prefix%%price%%suffix%&6."),
-        PURCHASE_ERROR("purchase-ERROR", "&cCould not complete transaction for %item%&c."),
-        SHOP_DISABLED("shop-disabled", "&cThe pouch shop is disabled."),
-        NO_PERMISSION("no-permission", "&cYou cannot open this pouch.");
+        FULL_INV("full-inv", "<red>%player%'s inventory is full!"),
+        GIVE_ITEM("give-item", "<gold>Given </gold><yellow>%player% %item%</yellow><gold>."),
+        RECEIVE_ITEM("receive-item", "<gold>You have been given %item%</gold><gold>."),
+        PRIZE_MESSAGE("prize-message", "<gold>You have received </gold><red>%prefix%%prize%%suffix%</red><gold>!"),
+        ALREADY_OPENING("already-opening", "<bold><red>Server </red></bold><bold><dark_gray>» </dark_gray></bold><gray>Jiz oteviras balicek, vyckej!"),
+        INVALID_POUCH("invalid-pouch", "<red>This pouch is invalid and cannot be opened."),
+        INVENTORY_FULL("inventory-full", "<red>Your inventory is full."),
+        REWARD_ERROR("reward-error", "<red>Your reward of %prefix%%prize%%suffix% has failed to process. Contact an admin, this has been logged."),
+        PURCHASE_SUCCESS("purchase-success", "<gold>You have purchased %item%</gold><gold> for </gold><red>%prefix%%price%%suffix%</red><gold>."),
+        PURCHASE_FAIL("purchase-fail", "<red>You do not have </red><red>%prefix%%price%%suffix%</red><gold>."),
+        PURCHASE_ERROR("purchase-ERROR", "<red>Could not complete transaction for %item%</red><red>."),
+        SHOP_DISABLED("shop-disabled", "<red>The pouch shop is disabled."),
+        NO_PERMISSION("no-permission", "<red>You cannot open this pouch.");
 
         private final String id;
         private final String def; // (default message if undefined)
@@ -132,14 +127,6 @@ public class MoneyPouch extends JavaPlugin {
         Message(String id, String def) {
             this.id = id;
             this.def = def;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getDef() {
-            return def;
         }
     }
 }
