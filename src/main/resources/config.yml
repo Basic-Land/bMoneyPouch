@@ -4,48 +4,48 @@ pouches:
   tier:
     # Define pouches here
     vault-1:
-      name: "&2&lTier I Money Pouch &r&7(Right Click)"
-      item: "ENDER_CHEST"
+      Name: "&2&lTier I Money Pouch &r&7(Right Click)"
+      Material: "ENDER_CHEST"
       pricerange:
         from: 1000
         to: 10000
       options:
         economytype: "VAULT"
         permission-required: true      # requires permission "moneypouch.pouches.vault-1"
-      lore:
+      Lore:
         - "&7Open this pouch to receive money!"
     
     vault-2:
-      name: "&c&lTier II Money Pouch &r&7(Right Click)"
-      item: "ENDER_CHEST"
+      Name: "&c&lTier II Money Pouch &r&7(Right Click)"
+      Material: "ENDER_CHEST"
       pricerange:
         from: 10001
         to: 50000
       options:
         economytype: "VAULT"
-      lore:
+      Lore:
         - "&7Open this pouch to receive money!"
     
     vault-3:
-      name: "&6&lTier III Money Pouch &r&7(Right Click)"
-      item: "ENDER_CHEST"
+      Name: "&6&lTier III Money Pouch &r&7(Right Click)"
+      Material: "ENDER_CHEST"
       pricerange:
         from: 50001
         to: 200000
       options:
         economytype: "VAULT"
-      lore:
+      Lore:
         - "&7Open this pouch to receive money!"
 
     xp-1:
-      name: "&6&lTier I XP Pouch &r&7(Right Click)"
-      item: "CHEST"
+      Name: "&6&lTier I XP Pouch &r&7(Right Click)"
+      Material: "CHEST"
       pricerange:
         from: 20
         to: 400
       options:
         economytype: "XP"
-      lore:
+      Lore:
         - "&7Open this pouch to receive experience!"
 
   # Sound settings (!!!!!!! MUST change for pre-1.9 !!!!!!!)

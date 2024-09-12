@@ -65,8 +65,6 @@ public class UseEvent implements Listener {
         if (hand.getType() == Material.AIR) return;
 
         NBT nbt = new NBT(hand);
-        if (!nbt.hasNBTTags()) return;
-
         String id = nbt.getString("moneyPouch");
         if (id == null) return;
 
