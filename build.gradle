@@ -8,31 +8,52 @@ version = '4.0'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
+def ossRhUser = "dev"
+def ossRhPass = "rtVXgxFyWkiVfU3"
+
 repositories {
-    mavenLocal()
     maven { url = uri('https://repo.maven.apache.org/maven2/') }
     maven {
-        url 'http://nexus.basicland.cz:8081/repository/dev-private/'
+        url = uri("http://nexus.basicland.cz:8081/repository/dev-private/")
         allowInsecureProtocol = true
         credentials {
-            username "dev"
-            password "rtVXgxFyWkiVfU3"
+            username = ossRhUser
+            password = ossRhPass
+        }
+    }
+    maven {
+        url = uri("http://nexus.basicland.cz:8081/repository/dev-snapshots/")
+        allowInsecureProtocol = true
+        credentials {
+            username = ossRhUser
+            password = ossRhPass
         }
     }
     maven {
         url "https://repo.papermc.io/repository/maven-public/"
     }
+    maven {
+        url = uri("https://jitpack.io")
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 dependencies {
     // Plugin Hooks
-    compileOnly "com.github.MilkBowl:VaultAPI:1.7"
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
 
     compileOnly 'org.jetbrains:annotations:23.0.0'
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor "org.projectlombok:lombok:1.18.36"
-    compileOnly 'cz.basicland:bLibs:2.0.0-WIP-b54'
+    compileOnly ("cz.basicland:bLibs:2.1.0-SNAPSHOT") {
+        changing = true
+    }
 }
 
 jar {
