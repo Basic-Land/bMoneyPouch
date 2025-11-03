@@ -83,8 +83,7 @@ public class MoneyPouchAdminCommand implements LCommand {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, String[] args) {
         if (args.length == 1) {
-            List<String> options = Arrays.asList("list", "economies", "reload");
-            return StringUtils.copyMatches(args[0], options);
+            return StringUtils.copyMatches(args[0], Arrays.asList("list", "economies", "reload"));
         }
 
         return Collections.emptyList();

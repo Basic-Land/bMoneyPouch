@@ -51,9 +51,9 @@ pouches:
   # Sound settings (!!!!!!! MUST change for pre-1.9 !!!!!!!)
   sound:
     enabled: true
-    opensound: "BLOCK_CHEST_OPEN"       # (CHEST_OPEN  pre-1.9)
-    revealsound: "BLOCK_ANVIL_LAND"     # (ANVIL_LAND  pre-1.9)
-    endsound: "ENTITY_GENERIC_EXPLODE"  # (EXPLODE  pre-1.9)
+    opensound: "BLOCK_CHEST_OPEN/3/1"       # (CHEST_OPEN  pre-1.9)
+    revealsound: "BLOCK_ANVIL_LAND/3/1"     # (ANVIL_LAND  pre-1.9)
+    endsound: "ENTITY_GENERIC_EXPLODE/3/1"  # (EXPLODE  pre-1.9)
 
   # Title settings (will not work before 1.8, timings will not work before 1.10)
   title:

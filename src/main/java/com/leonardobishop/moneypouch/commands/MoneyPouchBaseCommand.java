@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MoneyPouchBaseCommand implements LCommand {
 
@@ -57,8 +58,8 @@ public class MoneyPouchBaseCommand implements LCommand {
                     target = p;
                     break;
                 }
-            } else if (sender instanceof Player) {
-                target = ((Player) sender);
+            } else if (sender instanceof Player t) {
+                target = t;
             }
             int amount = 1;
             if (args.length >= 3) {
@@ -121,13 +122,9 @@ public class MoneyPouchBaseCommand implements LCommand {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (args.length == 1) {
-            List<String> pouchNames = new ArrayList<>();
-            for (Pouch pouch : plugin.getPouches()) {
-                pouchNames.add(pouch.id());
-            }
-            return StringUtils.copyMatches(args[0], pouchNames);
+            return StringUtils.copyMatches(args[0], plugin.getPouches().stream().map(Pouch::id).toList());
         }
 
         return Collections.emptyList();

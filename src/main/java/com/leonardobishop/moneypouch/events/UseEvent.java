@@ -3,13 +3,13 @@ package com.leonardobishop.moneypouch.events;
 import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
 import cz.basicland.blibs.spigot.hooks.Check;
+import cz.basicland.blibs.spigot.utils.SoundUtils;
 import cz.basicland.blibs.spigot.utils.item.NBT;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -101,17 +101,10 @@ public class UseEvent implements Listener {
         }
     }
 
-    private void playSound(Player player, String name) {
-        try {
-            player.playSound(player.getLocation(), Sound.valueOf(name), 3, 1);
-        } catch (Exception ignored) {
-        }
-    }
-
     private void usePouch(Player player, Pouch p) {
         opening.add(player.getUniqueId());
         long random = ThreadLocalRandom.current().nextLong(p.minRange(), p.maxRange());
-        playSound(player, plugin.getCfg().getString("pouches.sound.opensound"));
+        SoundUtils.playSound(player, "pouches.sound.opensound", plugin.getCfg());
         new BukkitRunnable() {
             final String number = (delimiter ? (new DecimalFormat("#,###").format(random)) : String.valueOf(random));
             int position = 0;
@@ -120,7 +113,7 @@ public class UseEvent implements Listener {
             @Override
             public void run() {
                 if (player.isOnline()) {
-                    playSound(player, plugin.getCfg().getString("pouches.sound.revealsound"));
+                    SoundUtils.playSound(player, "pouches.sound.revealsound", plugin.getCfg());
                     String prefix = prefixColour + p.economyType().getPrefix();
                     StringBuilder viewedTitle = new StringBuilder();
                     String suffix = suffixColour + p.economyType().getSuffix();
@@ -176,7 +169,7 @@ public class UseEvent implements Listener {
                     try {
                         p.economyType().processPayment(player, random);
                         if (player.isOnline()) {
-                            playSound(player, plugin.getCfg().getString("pouches.sound.endsound"));
+                            SoundUtils.playSound(player, "pouches.sound.endsound", plugin.getCfg());
                             player.sendRichMessage(plugin.getMessage(MoneyPouch.Message.PRIZE_MESSAGE)
                                     .replace("%prefix%", p.economyType().getPrefix())
                                     .replace("%suffix%", p.economyType().getSuffix())
