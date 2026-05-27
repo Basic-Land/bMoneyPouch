@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'bMoneyPouch'
-version = '4.0'
+version = '4.1'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 

@@ -27,9 +27,6 @@ import java.util.logging.Level;
 
 public class UseEvent implements Listener {
 
-    private final MoneyPouch plugin;
-    private final ArrayList<UUID> opening = new ArrayList<>();
-
     final String prefixColour;
     final String suffixColour;
     final String revealColour;
@@ -39,6 +36,8 @@ public class UseEvent implements Listener {
     final boolean delimiter;
     final boolean revealComma;
     final boolean reversePouchReveal;
+    private final MoneyPouch plugin;
+    private final ArrayList<UUID> opening = new ArrayList<>();
 
 
     public UseEvent(MoneyPouch plugin) {
@@ -124,7 +123,7 @@ public class UseEvent implements Listener {
                             viewedTitle.append(revealColour).append(number.charAt(i));
                         }
                         if ((i == (position - 1)) && (position != number.length())
-                                && (reversePouchReveal
+                            && (reversePouchReveal
                                 ? (revealComma && (number.charAt(number.length() - i - 1)) == ',')
                                 : (revealComma && (number.charAt(i + 1)) == ','))) {
                             position++;
@@ -178,7 +177,7 @@ public class UseEvent implements Listener {
                     } catch (Throwable t) {
                         if (plugin.getCfg().getBoolean("error-handling.log-failed-transactions", true)) {
                             plugin.getLogger().log(Level.SEVERE, "Failed to process payment from pouch with ID '" + p.id() + "' for player '" + player.getName()
-                                    + "' of amount " + random + " of economy " + p.economyType().toString() + ": " + t.getMessage());
+                                                                 + "' of amount " + random + " of economy " + p.economyType().toString() + ": " + t.getMessage());
                         }
                         if (player.isOnline()) {
                             if (plugin.getCfg().getBoolean("error-handling.refund-pouch", false)) {

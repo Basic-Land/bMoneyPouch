@@ -4,16 +4,17 @@ import com.leonardobishop.moneypouch.MoneyPouch;
 import com.leonardobishop.moneypouch.Pouch;
 import com.leonardobishop.moneypouch.economytype.EconomyType;
 import cz.basicland.blibs.shared.utils.StringUtils;
-import cz.basicland.blibs.spigot.commands.LCommand;
+import cz.basicland.blibs.spigot.commands.MainCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-public class MoneyPouchAdminCommand implements LCommand {
+public class MoneyPouchAdminCommand implements MainCommand {
 
     private final MoneyPouch plugin;
 
@@ -47,17 +48,17 @@ public class MoneyPouchAdminCommand implements LCommand {
                 case "list" -> {
                     for (Pouch pouch : plugin.getPouches()) {
                         sender.sendRichMessage("<dark_purple>" + pouch.id() + " </dark_purple><light_purple>(min: " +
-                                pouch.minRange() + ", max: " + pouch.maxRange() + ", economy: " +
-                                pouch.economyType().toString() + " [" + pouch.economyType().getPrefix() +
-                                "<dark_gray>/</dark_gray><light_purple>" + pouch.economyType().getSuffix() + "])");
+                                               pouch.minRange() + ", max: " + pouch.maxRange() + ", economy: " +
+                                               pouch.economyType().toString() + " [" + pouch.economyType().getPrefix() +
+                                               "<dark_gray>/</dark_gray><light_purple>" + pouch.economyType().getSuffix() + "])");
                     }
                     return true;
                 }
                 case "economy", "economies" -> {
                     for (Map.Entry<String, EconomyType> economyTypeEntry : plugin.getEconomyTypes().entrySet()) {
                         sender.sendRichMessage("<dark_purple>" + economyTypeEntry.getKey() + " </dark_purple><light_purple>" + economyTypeEntry.getValue().toString() +
-                                " [" + economyTypeEntry.getValue().getPrefix() +
-                                "<dark_gray>/</dark_gray><light_purple>" + economyTypeEntry.getValue().getSuffix() + "])");
+                                               " [" + economyTypeEntry.getValue().getPrefix() +
+                                               "<dark_gray>/</dark_gray><light_purple>" + economyTypeEntry.getValue().getSuffix() + "])");
                     }
                     return true;
                 }
